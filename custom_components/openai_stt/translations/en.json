@@ -1,0 +1,32 @@
+{
+    "config": {
+      "step": {
+        "user": {
+          "title": "Add OpenAI Speech-to-Text",
+          "description": "Configure OpenAI STT for your Home Assistant instance.",
+          "data": {
+            "api_key": "Enter OpenAI API key",
+            "model": "STT Model",
+            "language": "Language (leave empty for auto-detection)",
+            "response_format": "Response Format",
+            "url": "Enter an OpenAI-compatible endpoint (optionally include a port number)."
+          }
+        }
+      },
+      "error": {
+        "wrong_api_key": "Invalid API key. Please enter a valid API key."
+      }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "title": "Configure STT options",
+          "data": {
+            "model": "STT Model",
+            "language": "Language (leave empty for auto-detection)",
+            "response_format": "Response Format"
+          }
+        }
+      }
+    }
+  }

@@ -1,15 +1,14 @@
-"""Custom integration for OpenAI TTS."""
+"""Custom integration for OpenAI STT."""
 from __future__ import annotations
 
 from homeassistant.const import Platform
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-# Define the platforms to be loaded
-PLATFORMS: list[str] = [Platform.TTS]
+PLATFORMS: list[str] = [Platform.STT]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up entities."""
+    """Set up STT entities from a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

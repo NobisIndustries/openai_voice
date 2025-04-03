@@ -87,10 +87,13 @@ class OpenAISTTEngine:
                 # Set a timeout of 30 seconds for the entire request.
                 with urlopen(req, timeout=30) as response:
                     content = response.read()
-                    result = json.loads(content.decode('utf-8'))
-                    if isinstance(result, dict) and 'text' in result:
-                        return result['text']
-                    return result
+                    if self._response_format == "json":
+                        result = json.loads(content.decode('utf-8'))
+                        if isinstance(result, dict) and 'text' in result:
+                            return result['text']
+                        return result
+                    # For text format or any other
+                    return content.decode('utf-8')
             except CancelledError as ce:
                 _LOGGER.exception("STT request cancelled")
                 raise  # Propagate cancellation.

@@ -1,9 +1,8 @@
 """
-Support for OpenAI STT.
+Support for OpenAI STT as a separate component.
 """
 import logging
 import async_timeout
-import voluptuous as vol
 from homeassistant.components.stt import (
     AudioBitRates,
     AudioChannels,
@@ -14,65 +13,64 @@ from homeassistant.components.stt import (
     SpeechMetadata,
     SpeechResult,
     SpeechResultState,
-    PLATFORM_SCHEMA,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_API_KEY,
     CONF_STT_MODEL,
     CONF_STT_LANGUAGE,
     CONF_STT_RESPONSE_FORMAT,
+    CONF_URL,
     DEFAULT_STT_MODEL,
     DEFAULT_STT_LANGUAGE,
     DEFAULT_STT_RESPONSE_FORMAT,
+    OPENAI_STT_URL,
 )
 from .openaistt_engine import OpenAISTTEngine
 
 _LOGGER = logging.getLogger(__name__)
 
-# Default endpoint for OpenAI transcriptions
-OPENAI_STT_URL = "https://api.openai.com/v1/audio/transcriptions"
-
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_STT_LANGUAGE, default=DEFAULT_STT_LANGUAGE): cv.string,
-    vol.Optional(CONF_STT_MODEL, default=DEFAULT_STT_MODEL): cv.string,
-    vol.Optional(CONF_STT_RESPONSE_FORMAT, default=DEFAULT_STT_RESPONSE_FORMAT): cv.string
-})
-
-async def async_get_engine(hass, config, discovery_info=None):
-    """Set up OpenAI STT speech component."""
-    api_key = config[CONF_API_KEY]
-    model = config.get(CONF_STT_MODEL, DEFAULT_STT_MODEL)
-    language = config.get(CONF_STT_LANGUAGE, DEFAULT_STT_LANGUAGE)
-    response_format = config.get(CONF_STT_RESPONSE_FORMAT, DEFAULT_STT_RESPONSE_FORMAT)
+async def async_setup_entry(
+    hass: HomeAssistant, 
+    config_entry: ConfigEntry, 
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up OpenAI STT platform from a config entry."""
+    api_key = config_entry.data.get(CONF_API_KEY)
+    model = config_entry.data.get(CONF_STT_MODEL, DEFAULT_STT_MODEL)
+    language = config_entry.data.get(CONF_STT_LANGUAGE, DEFAULT_STT_LANGUAGE)
+    response_format = config_entry.data.get(CONF_STT_RESPONSE_FORMAT, DEFAULT_STT_RESPONSE_FORMAT)
+    url = config_entry.data.get(CONF_URL, OPENAI_STT_URL)
     
-    return OpenAISTTProvider(hass, api_key, model, language, response_format)
+    engine = OpenAISTTEngine(
+        api_key=api_key,
+        model=model,
+        language=language,
+        url=url,
+        response_format=response_format
+    )
+    
+    async_add_entities([OpenAISTTProvider(hass, config_entry, engine)])
 
 class OpenAISTTProvider(Provider):
     """The OpenAI STT API provider."""
 
-    def __init__(self, hass, api_key, model, language, response_format):
+    def __init__(self, hass, config_entry, engine):
         """Initialize OpenAI STT provider."""
         self.hass = hass
-        self._api_key = api_key
-        self._model = model
-        self._language = language
-        self._response_format = response_format
-        self._engine = OpenAISTTEngine(
-            api_key=api_key,
-            model=model,
-            language=language,
-            url=OPENAI_STT_URL,
-            response_format=response_format
-        )
+        self._config_entry = config_entry
+        self._engine = engine
+        self._attr_unique_id = f"{config_entry.entry_id}_stt"
+        model_name = self._engine._model.split("-")[-1]
+        self._attr_name = f"OpenAI {model_name}"
 
     @property
     def default_language(self) -> str:
         """Return the default language."""
-        return self._language
+        return self._engine._language
 
     @property
     def supported_languages(self) -> list[str]:
@@ -133,7 +131,7 @@ class OpenAISTTProvider(Provider):
         _LOGGER.debug(
             "Processing audio stream with language: %s, model: %s",
             metadata.language,
-            self._model,
+            self._engine._model,
         )
         
         # Collect audio data from the stream
@@ -142,7 +140,7 @@ class OpenAISTTProvider(Provider):
             audio_data += chunk
         
         # If a language is specified in metadata, use it
-        language = metadata.language if metadata.language else self._language
+        language = metadata.language if metadata.language else self._engine._language
         
         try:
             async with async_timeout.timeout(30):
