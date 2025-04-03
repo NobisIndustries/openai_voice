@@ -1,8 +1,10 @@
-# OpenAI TTS Custom Component for Home Assistant
+# OpenAI Speech Services Custom Component for Home Assistant
 
-The OpenAI TTS component for Home Assistant makes it possible to use the OpenAI API to generate spoken audio from text. This can be used in automations, assistants, scripts, or any other component that supports TTS within Home Assistant. 
+This custom component provides integration with OpenAI's speech services for Home Assistant, offering both Text-to-Speech (TTS) and Speech-to-Text (STT) capabilities.
 
 ## Features  
+
+### Text-to-Speech Features
 
 - **Text-to-Speech** conversion using OpenAI's API  
 - **Support for multiple languages and voices** – No special configuration needed; the AI model auto-recognizes the language.  
@@ -12,23 +14,32 @@ The OpenAI TTS component for Home Assistant makes it possible to use the OpenAI 
 - **Chime option** – Useful for announcements on speakers. *(See Devices → OpenAI TTS → CONFIGURE button)*
 - **User-configurable chime sounds** – Drop your own chime sound into  `config/custom_components/openai_tts/chime` folder (MP3).
 - **Audio normalization option** – Uses more CPU but improves audio clarity on mobile phones and small speakers. *(See Devices → OpenAI TTS → CONFIGURE button)*
-- ⭐(New!) **Support for new gpt-4o-mini-tts model** – A fast and powerful language model.
-- ⭐(New!) **Text-to-Speech Instructions option** – Instruct the text-to-speech model to speak in a specific way (only works with newest gpt-4o-mini-tts model). [OpenAI new generation audio models](https://openai.com/index/introducing-our-next-generation-audio-models/)
+- **Support for new gpt-4o-mini-tts model** – A fast and powerful language model.
+- **Text-to-Speech Instructions option** – Instruct the text-to-speech model to speak in a specific way (only works with newest gpt-4o-mini-tts model). [OpenAI new generation audio models](https://openai.com/index/introducing-our-next-generation-audio-models/)
 
+### NEW: Speech-to-Text Features
 
+- **Speech-to-Text** conversion using OpenAI's latest models
+- **Support for new models** – Uses the latest GPT-4o models for transcription: `gpt-4o-mini-transcribe` (default) and `gpt-4o-transcribe`
+- **Legacy model support** – Also supports the original Whisper model (`whisper-1`)
+- **Multiple language support** – Automatically detects and transcribes in many languages
+- **Customizable response format** – Choose between JSON or text output
+- **Integration with Home Assistant** – Works with assistants, automations, and voice commands
+- **Supports multiple audio formats** – Works with WAV, MP3, MP4, and OGG files
+- **High accuracy** – Leverages OpenAI's state-of-the-art transcription models for superior results
 
 ### *Caution! You need an OpenAI API key and some balance available in your OpenAI account!* ###
 visit: (https://platform.openai.com/docs/pricing)
 
-## YouTube sample video (its not a tutorial!)
+## YouTube sample video (TTS demo)
 
 [![OpenAI TTS Demo](https://img.youtube.com/vi/oeeypI_X0qs/0.jpg)](https://www.youtube.com/watch?v=oeeypI_X0qs)
 
+## Sample Home Assistant services
 
+### TTS Service Example
 
-## Sample Home Assistant service
-
-```
+```yaml
 service: tts.speak
 target:
   entity_id: tts.openai_nova_engine
@@ -38,7 +49,20 @@ data:
   message: My speech has improved now!
   options:
     chime: true                          # Enable or disable the chime
-    instructions: "Speak like a pirate"  # Instructions for text-to-speach model on how to speak 
+    instructions: "Speak like a pirate"  # Instructions for text-to-speach model on how to speak
+```
+
+### STT Service Example
+
+```yaml
+service: stt.start
+data:
+  device_id: [your_microphone_device_id]
+  entity_id: stt.openai_gpt_4o_mini_transcribe
+  metadata:
+    language: en     # Optional, will auto-detect if not specified
+  options:
+    response_format: text  # Optional, defaults to text
 ```
 
 ## HACS installation ( *preferred!* ) 
@@ -51,9 +75,9 @@ data:
 
 4. Click on "Add" to add the custom repository.
 
-5. You can then click on the "OpenAI TTS Speech Services" repository entry and download it. Restart Home Assistant to apply the component.
+5. You can then click on the "OpenAI Speech Services" repository entry and download it. Restart Home Assistant to apply the component.
 
-6. Add the integration via UI, provide API key and select required model and voice. Multiple instances may be configured.
+6. Add the integration via UI, provide API key and select required models. Multiple instances may be configured.
 
 ## Manual installation
 
@@ -65,4 +89,4 @@ data:
 
 4. Restart Home Assistant
 
-5. Add the integration via UI, provide API key and select required model and voice. Multiple instances may be configured.
+5. Add the integration via UI, provide API key and select required models. Multiple instances may be configured.
